@@ -1,19 +1,8 @@
-<!-- FocusNews Cinematic Webpage (Pure HTML + JS + Three.js) -->
-<!DOCTYPE html>
-<html lang="en">
+<!-- FocusNews Cinematic Webpage (Pure HTML + JS + Three.js) --><!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FocusNews â€” Cinematic Showcase</title>
-
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Three.js r128 and OrbitControls (matching earlier script libs) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-  <style>
+  <title>FocusNews — Cinematic Showcase</title>  <!-- Tailwind CDN -->  <script src="https://cdn.tailwindcss.com"></script>  <!-- Three.js r128 and OrbitControls (matching earlier script libs) -->  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>  <style>
     :root{--glass: rgba(255,255,255,0.06);--accent1:#06b6d4;--accent2:#7c3aed}
     html,body,#app{height:100%;}
     body {
@@ -34,78 +23,63 @@
 
     /* small responsive tweaks */
     @media (max-width:1024px){ .hide-lg{display:none;} }
-  </style>
-</head>
-<body class="min-h-screen w-full flex flex-col" id="app">
-
-  <div class="cinema-grid" aria-hidden="true"></div>
-
-  <!-- HEADER -->
-  <header class="w-full px-6 md:px-12 py-6 flex items-center justify-between">
+  </style></head>
+<body class="min-h-screen w-full flex flex-col" id="app">  <div class="cinema-grid" aria-hidden="true"></div>  <!-- HEADER -->  <header class="w-full px-6 md:px-12 py-6 flex items-center justify-between">
     <div class="flex items-center gap-4">
       <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 shadow-lg flex items-center justify-center text-lg font-bold">FN</div>
       <div>
         <div class="text-lg font-semibold">FocusNews</div>
         <div class="text-xs text-slate-300">Wellness-first news & adaptive reading</div>
       </div>
+    </div><nav class="hidden md:flex gap-6 items-center text-sm text-slate-300 hide-lg">
+  <button class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition">Live Demo</button>
+  <button class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition">Docs</button>
+  <button class="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-semibold">Get Early Access</button>
+</nav>
+
+  </header>  <main class="flex-1 px-6 md:px-12 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-8"><!-- LEFT: 3D DRONE SCENE -->
+<div class="relative rounded-2xl shadow-2xl bg-black/20 p-2 backdrop-blur-md overflow-hidden" style="min-height:540px;">
+  <canvas id="droneCanvas" class="w-full h-full"></canvas>
+
+  <div id="featureBox" class="absolute bottom-6 left-6 right-6 feature-box p-4 rounded-xl shadow-lg max-w-xl transition-all">
+    <div class="text-xs text-slate-300">Feature</div>
+    <div id="featureTitle" class="text-lg font-bold"></div>
+    <div id="featureText" class="text-sm text-slate-300 mt-1"></div>
+  </div>
+
+  <div class="absolute bottom-6 right-6 flex gap-3">
+    <button id="tourBtn" class="px-4 py-2 rounded-lg bg-white/10">Play Tour</button>
+    <button id="prevBtn" class="px-3 py-2 rounded-lg bg-white/5">Prev</button>
+    <button id="nextBtn" class="px-3 py-2 rounded-lg bg-white/5">Next</button>
+  </div>
+</div>
+
+<!-- RIGHT: FEATURE LIST -->
+<section class="flex flex-col gap-6">
+  <div class="rounded-2xl p-6 bg-gradient-to-b from-white/5 to-white/10 shadow-xl">
+    <h2 class="text-2xl font-extrabold">FocusNews — The future of healthy news consumption</h2>
+    <p class="mt-3 text-slate-300">An adaptive, wellness-first news platform that reduces overwhelm and helps users stay informed — thoughtfully.</p>
+    <div class="mt-4 grid grid-cols-2 gap-3">
+      <div class="p-3 rounded-lg bg-black/40">
+        <div class="text-xs text-slate-300">Score</div>
+        <div class="text-xl font-bold">9.5 / 10</div>
+      </div>
+      <div class="p-3 rounded-lg bg-black/40">
+        <div class="text-xs text-slate-300">MVP</div>
+        <div class="text-xl font-bold">8 weeks</div>
+      </div>
     </div>
+  </div>
 
-    <nav class="hidden md:flex gap-6 items-center text-sm text-slate-300 hide-lg">
-      <button class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition">Live Demo</button>
-      <button class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition">Docs</button>
-      <button class="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-semibold">Get Early Access</button>
-    </nav>
-  </header>
+  <div class="rounded-2xl p-6 bg-black/30 shadow-inner overflow-auto max-h-[32rem]">
+    <h3 class="text-lg font-semibold mb-3">Core & Innovative Features</h3>
+    <ul id="featureList" class="space-y-3"></ul>
+  </div>
+</section>
 
-  <main class="flex-1 px-6 md:px-12 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-    <!-- LEFT: 3D DRONE SCENE -->
-    <div class="relative rounded-2xl shadow-2xl bg-black/20 p-2 backdrop-blur-md overflow-hidden" style="min-height:540px;">
-      <canvas id="droneCanvas" class="w-full h-full"></canvas>
-
-      <div id="featureBox" class="absolute bottom-6 left-6 right-6 feature-box p-4 rounded-xl shadow-lg max-w-xl transition-all">
-        <div class="text-xs text-slate-300">Feature</div>
-        <div id="featureTitle" class="text-lg font-bold"></div>
-        <div id="featureText" class="text-sm text-slate-300 mt-1"></div>
-      </div>
-
-      <div class="absolute bottom-6 right-6 flex gap-3">
-        <button id="tourBtn" class="px-4 py-2 rounded-lg bg-white/10">Play Tour</button>
-        <button id="prevBtn" class="px-3 py-2 rounded-lg bg-white/5">Prev</button>
-        <button id="nextBtn" class="px-3 py-2 rounded-lg bg-white/5">Next</button>
-      </div>
-    </div>
-
-    <!-- RIGHT: FEATURE LIST -->
-    <section class="flex flex-col gap-6">
-      <div class="rounded-2xl p-6 bg-gradient-to-b from-white/5 to-white/10 shadow-xl">
-        <h2 class="text-2xl font-extrabold">FocusNews â€” The future of healthy news consumption</h2>
-        <p class="mt-3 text-slate-300">An adaptive, wellness-first news platform that reduces overwhelm and helps users stay informed â€” thoughtfully.</p>
-        <div class="mt-4 grid grid-cols-2 gap-3">
-          <div class="p-3 rounded-lg bg-black/40">
-            <div class="text-xs text-slate-300">Score</div>
-            <div class="text-xl font-bold">9.5 / 10</div>
-          </div>
-          <div class="p-3 rounded-lg bg-black/40">
-            <div class="text-xs text-slate-300">MVP</div>
-            <div class="text-xl font-bold">8 weeks</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="rounded-2xl p-6 bg-black/30 shadow-inner overflow-auto max-h-[32rem]">
-        <h3 class="text-lg font-semibold mb-3">Core & Innovative Features</h3>
-        <ul id="featureList" class="space-y-3"></ul>
-      </div>
-    </section>
-  </main>
-
-  <footer class="w-full p-6 text-center text-slate-400 text-sm">Â© 2025 FocusNews â€” Built with care for attention & mental health.</footer>
-
-  <!-- JS: DRONE + FEATURE LOGIC -->
-  <script>
+  </main>  <footer class="w-full p-6 text-center text-slate-400 text-sm">© 2025 FocusNews — Built with care for attention & mental health.</footer>  <!-- JS: DRONE + FEATURE LOGIC -->  <script>
   /* ======================================================
-     Cinematic 3D Drone Showcase â€” completed and functional
+     Cinematic 3D Drone Showcase — completed and functional
      - Three.js (r128) basics: scene, camera, renderer
      - OrbitControls for interactivity
      - Drone composed of primitives + spinning rotors
@@ -433,6 +407,5 @@
   // expose for debugging (optional)
   window._focusnews = { scene, camera, renderer, setActiveFeature, startTour, stopTour };
 
-  </script>
-</body>
+  </script></body>
 </html>
