@@ -1,0 +1,438 @@
+<!-- FocusNews Cinematic Webpage (Pure HTML + JS + Three.js) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusNews â€” Cinematic Showcase</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Three.js r128 and OrbitControls (matching earlier script libs) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    :root{--glass: rgba(255,255,255,0.06);--accent1:#06b6d4;--accent2:#7c3aed}
+    html,body,#app{height:100%;}
+    body {
+      background: radial-gradient(ellipse at 10% 10%, rgba(8,20,40,0.6), transparent 10%), linear-gradient(#020617, #051027 40%, #071028 100%);
+      color: white;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      overflow-y: auto;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    canvas { display:block; width:100%; height:100%; }
+
+    /* cinematic subtle grid */
+    .cinema-grid{position:fixed;inset:0;z-index:-1;background-image:linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);background-size:120px 120px,120px 120px;opacity:0.06}
+
+    /* feature tooltip box */
+    .feature-box{backdrop-filter: blur(6px);background: rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.04)}
+
+    /* small responsive tweaks */
+    @media (max-width:1024px){ .hide-lg{display:none;} }
+  </style>
+</head>
+<body class="min-h-screen w-full flex flex-col" id="app">
+
+  <div class="cinema-grid" aria-hidden="true"></div>
+
+  <!-- HEADER -->
+  <header class="w-full px-6 md:px-12 py-6 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 shadow-lg flex items-center justify-center text-lg font-bold">FN</div>
+      <div>
+        <div class="text-lg font-semibold">FocusNews</div>
+        <div class="text-xs text-slate-300">Wellness-first news & adaptive reading</div>
+      </div>
+    </div>
+
+    <nav class="hidden md:flex gap-6 items-center text-sm text-slate-300 hide-lg">
+      <button class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition">Live Demo</button>
+      <button class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition">Docs</button>
+      <button class="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-semibold">Get Early Access</button>
+    </nav>
+  </header>
+
+  <main class="flex-1 px-6 md:px-12 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+    <!-- LEFT: 3D DRONE SCENE -->
+    <div class="relative rounded-2xl shadow-2xl bg-black/20 p-2 backdrop-blur-md overflow-hidden" style="min-height:540px;">
+      <canvas id="droneCanvas" class="w-full h-full"></canvas>
+
+      <div id="featureBox" class="absolute bottom-6 left-6 right-6 feature-box p-4 rounded-xl shadow-lg max-w-xl transition-all">
+        <div class="text-xs text-slate-300">Feature</div>
+        <div id="featureTitle" class="text-lg font-bold"></div>
+        <div id="featureText" class="text-sm text-slate-300 mt-1"></div>
+      </div>
+
+      <div class="absolute bottom-6 right-6 flex gap-3">
+        <button id="tourBtn" class="px-4 py-2 rounded-lg bg-white/10">Play Tour</button>
+        <button id="prevBtn" class="px-3 py-2 rounded-lg bg-white/5">Prev</button>
+        <button id="nextBtn" class="px-3 py-2 rounded-lg bg-white/5">Next</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: FEATURE LIST -->
+    <section class="flex flex-col gap-6">
+      <div class="rounded-2xl p-6 bg-gradient-to-b from-white/5 to-white/10 shadow-xl">
+        <h2 class="text-2xl font-extrabold">FocusNews â€” The future of healthy news consumption</h2>
+        <p class="mt-3 text-slate-300">An adaptive, wellness-first news platform that reduces overwhelm and helps users stay informed â€” thoughtfully.</p>
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-lg bg-black/40">
+            <div class="text-xs text-slate-300">Score</div>
+            <div class="text-xl font-bold">9.5 / 10</div>
+          </div>
+          <div class="p-3 rounded-lg bg-black/40">
+            <div class="text-xs text-slate-300">MVP</div>
+            <div class="text-xl font-bold">8 weeks</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl p-6 bg-black/30 shadow-inner overflow-auto max-h-[32rem]">
+        <h3 class="text-lg font-semibold mb-3">Core & Innovative Features</h3>
+        <ul id="featureList" class="space-y-3"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="w-full p-6 text-center text-slate-400 text-sm">Â© 2025 FocusNews â€” Built with care for attention & mental health.</footer>
+
+  <!-- JS: DRONE + FEATURE LOGIC -->
+  <script>
+  /* ======================================================
+     Cinematic 3D Drone Showcase â€” completed and functional
+     - Three.js (r128) basics: scene, camera, renderer
+     - OrbitControls for interactivity
+     - Drone composed of primitives + spinning rotors
+     - Hotspot spheres that respond to hover & click (raycasting)
+     - UI: feature box + feature list sync + autoplay tour
+     ====================================================== */
+
+  const FEATURES = [
+    { id: 1, title: "AI News Companion", text:"Personalized assistant that adapts reading speed and suggests related stories." },
+    { id: 2, title: "Collaborative Reading", text:"Shared sessions, group digests and synchronized annotations." },
+    { id: 3, title: "News Gaming System", text:"Daily challenges, badges and comprehension quizzes to boost engagement." },
+    { id: 4, title: "AR News Experience", text:"Location-based overlays and historical context while exploring the real world." },
+    { id: 5, title: "Emotional Resilience", text:"Mood checks, breathing exercises and positive news injection after heavy stories." }
+  ];
+
+  // UI elements
+  const featureList = document.getElementById("featureList");
+  const featureTitle = document.getElementById("featureTitle");
+  const featureText = document.getElementById("featureText");
+  const tourBtn = document.getElementById('tourBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  let activeFeature = 1;
+  let tourPlaying = false;
+  let tourInterval = null;
+
+  function setActiveFeature(id) {
+    activeFeature = id;
+    const f = FEATURES.find(x => x.id === id) || FEATURES[0];
+    featureTitle.textContent = f.title;
+    featureText.textContent = f.text;
+
+    // highlight list items
+    Array.from(featureList.children).forEach((li, idx) => {
+      if (FEATURES[idx].id === id) li.classList.add('bg-gradient-to-r','from-cyan-500','to-purple-500','text-black');
+      else li.classList.remove('bg-gradient-to-r','from-cyan-500','to-purple-500','text-black');
+    });
+  }
+
+  // populate feature list
+  FEATURES.forEach(f => {
+    const li = document.createElement("li");
+    li.className = "p-3 rounded-xl bg-white/6 hover:scale-[1.01] transition transform cursor-pointer";
+    li.innerHTML = `<div class='font-bold'>${f.title}</div><div class='text-xs text-slate-300'>${f.text}</div>`;
+    li.onclick = () => { setActiveFeature(f.id); focusOnHotspot(f.id); };
+    li.onmouseenter = () => { setActiveFeature(f.id); };
+    featureList.appendChild(li);
+  });
+
+  setActiveFeature(activeFeature);
+
+  // THREE.js setup
+  const canvas = document.getElementById('droneCanvas');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+  camera.position.set(0, 2.6, 6);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+
+  // Controls
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enablePan = false;
+  controls.minPolarAngle = 0.4;
+  controls.maxPolarAngle = Math.PI / 2.2;
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+
+  // Lights
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  dirLight.position.set(5, 10, 5);
+  scene.add(dirLight);
+  const amb = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(amb);
+
+  // subtle ground reflection using a dark plane
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(30,30),
+    new THREE.MeshStandardMaterial({ color:0x050814, metalness:0.2, roughness:0.95 })
+  );
+  ground.rotation.x = -Math.PI/2;
+  ground.position.y = -1.0;
+  scene.add(ground);
+
+  // drone group
+  const drone = new THREE.Group();
+  scene.add(drone);
+
+  // body
+  const bodyGeo = new THREE.BoxGeometry(1.6, 0.4, 0.9);
+  const bodyMat = new THREE.MeshStandardMaterial({ color:0x0ea5e9, metalness:0.6, roughness:0.2, emissive:0x083358, emissiveIntensity:0.06 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.castShadow = true;
+  body.receiveShadow = true;
+  drone.add(body);
+
+  // front sensor
+  const sensor = new THREE.Mesh(new THREE.SphereGeometry(0.12,16,16), new THREE.MeshStandardMaterial({ color:0xffffff, emissive:0x9be8ff, emissiveIntensity:0.8 }));
+  sensor.position.set(0.85, 0.05, 0);
+  drone.add(sensor);
+
+  // create 4 arms with rotors
+  const rotorGroup = [];
+  const armPositions = [[1.05,0.12,0.5],[-1.05,0.12,0.5],[1.05,0.12,-0.5],[-1.05,0.12,-0.5]];
+  armPositions.forEach((pos, i) => {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.9,12), new THREE.MeshStandardMaterial({ color:0x94a3b8, metalness:0.4, roughness:0.5 }));
+    arm.rotation.z = Math.PI/2;
+    arm.position.set(...pos);
+    drone.add(arm);
+
+    const rotor = new THREE.Group();
+    rotor.position.set(pos[0], pos[1]+0.5, pos[2]);
+
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.02,8), new THREE.MeshStandardMaterial({ color:0x111827 }));
+    hub.rotation.x = Math.PI/2;
+    rotor.add(hub);
+
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 0.06), new THREE.MeshStandardMaterial({ color:0x0f172a, metalness:0.8, roughness:0.2 }));
+    blade.position.set(0,0,0);
+    rotor.add(blade);
+
+    rotor.userData = { speed: (i%2?1:-1) * (0.02 + Math.random()*0.02) };
+    drone.add(rotor);
+    rotorGroup.push(rotor);
+  });
+
+  // subtle slow hover animation parameters
+  const clock = new THREE.Clock();
+
+  // hotspots
+  const hotspots = [
+    { id:1, label:'AI Companion', pos:new THREE.Vector3(0.9,0.6,0) },
+    { id:2, label:'Collaborative', pos:new THREE.Vector3(-0.9,0.6,0) },
+    { id:3, label:'Gaming', pos:new THREE.Vector3(0.9,0.6,-0.95) },
+    { id:4, label:'AR', pos:new THREE.Vector3(-0.9,0.6,-0.95) },
+    { id:5, label:'Resilience', pos:new THREE.Vector3(0,0.4,0.9) }
+  ];
+
+  const hotspotMeshes = [];
+  hotspots.forEach(h => {
+    const geo = new THREE.SphereGeometry(0.07,12,12);
+    const mat = new THREE.MeshStandardMaterial({ color:0xa78bfa, emissive:0xede9fe, emissiveIntensity:0.9 });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.copy(h.pos);
+    m.userData = { id: h.id, label:h.label };
+    drone.add(m);
+    hotspotMeshes.push(m);
+  });
+
+  // raycaster for hover detection
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let INTERSECTED = null;
+
+  function onPointerMove(event) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  function onCanvasClick(event){
+    if (INTERSECTED) {
+      focusOnHotspot(INTERSECTED.userData.id);
+    }
+  }
+
+  window.addEventListener('pointermove', onPointerMove);
+  renderer.domElement.addEventListener('click', onCanvasClick);
+
+  function focusOnHotspot(id){
+    const target = hotspotMeshes.find(m => m.userData.id === id);
+    if (!target) return;
+    // simple camera tween (lerp) using requestAnimationFrame loop
+    const startPos = camera.position.clone();
+    const endPos = new THREE.Vector3().copy(target.position).add(new THREE.Vector3(0,1.2,2.0));
+    const startLook = controls.target.clone();
+    const endLook = target.position.clone();
+    let t = 0;
+    const dur = 600; // ms
+    const startTime = performance.now();
+    function animateCam(now){
+      t = Math.min(1, (now - startTime) / dur);
+      camera.position.lerpVectors(startPos, endPos, t);
+      controls.target.lerpVectors(startLook, endLook, t);
+      controls.update();
+      if (t < 1) requestAnimationFrame(animateCam);
+    }
+    requestAnimationFrame(animateCam);
+    setActiveFeature(id);
+  }
+
+  // setActiveFeature will update UI; keep this function light
+  function setActiveFeature(id){
+    activeFeature = id;
+    const f = FEATURES.find(x => x.id === id) || FEATURES[0];
+    featureTitle.textContent = f.title;
+    featureText.textContent = f.text;
+
+    // visual highlight on hotspot
+    hotspotMeshes.forEach(m => {
+      if (m.userData.id === id) {
+        m.material.color.setHex(0xf97316);
+        m.material.emissive.setHex(0xffedd5);
+        m.scale.set(1.25,1.25,1.25);
+      } else {
+        m.material.color.setHex(0xa78bfa);
+        m.material.emissive.setHex(0xede9fe);
+        m.scale.set(1,1,1);
+      }
+    });
+
+    // highlight list item styles handled by adding classes
+    Array.from(featureList.children).forEach((li, idx) => {
+      if (FEATURES[idx].id === id) li.classList.add('bg-gradient-to-r','from-cyan-500','to-purple-500','text-black');
+      else li.classList.remove('bg-gradient-to-r','from-cyan-500','to-purple-500','text-black');
+    });
+  }
+
+  // initial highlight
+  setActiveFeature(activeFeature);
+
+  // autoplay tour
+  function startTour(){
+    if (tourInterval) clearInterval(tourInterval);
+    let idx = hotspots.findIndex(h => h.id === activeFeature);
+    tourInterval = setInterval(() => {
+      idx = (idx + 1) % hotspots.length;
+      const id = hotspots[idx].id;
+      focusOnHotspot(id);
+    }, 2200);
+    tourPlaying = true; tourBtn.textContent = 'Stop Tour';
+  }
+  function stopTour(){
+    if (tourInterval) clearInterval(tourInterval); tourInterval = null; tourPlaying=false; tourBtn.textContent = 'Play Tour';
+  }
+
+  tourBtn.onclick = () => { tourPlaying ? stopTour() : startTour(); };
+  prevBtn.onclick = () => { const curIdx = hotspots.findIndex(h=>h.id===activeFeature); const prev = hotspots[(curIdx -1 + hotspots.length)%hotspots.length].id; focusOnHotspot(prev); };
+  nextBtn.onclick = () => { const curIdx = hotspots.findIndex(h=>h.id===activeFeature); const next = hotspots[(curIdx +1) % hotspots.length].id; focusOnHotspot(next); };
+
+  // pointer hover detection loop
+  function handleHover(){
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(hotspotMeshes, false);
+    if (intersects.length > 0) {
+      if (INTERSECTED !== intersects[0].object) {
+        INTERSECTED = intersects[0].object;
+        // subtle scale
+        INTERSECTED.scale.set(1.35,1.35,1.35);
+        const id = INTERSECTED.userData.id;
+        setActiveFeature(id);
+      }
+    } else {
+      if (INTERSECTED) {
+        INTERSECTED.scale.set(1,1,1);
+        INTERSECTED = null;
+        // keep current active feature but remove hotspot highlight if not same as active
+        hotspotMeshes.forEach(m => { if (m.userData.id !== activeFeature){ m.scale.set(1,1,1); m.material.color.setHex(0xa78bfa); m.material.emissive.setHex(0xede9fe);} });
+      }
+    }
+  }
+
+  // Renderer & animation loop
+  function resizeRendererToDisplaySize() {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const needResize = canvas.width !== Math.floor(width * renderer.getPixelRatio()) || canvas.height !== Math.floor(height * renderer.getPixelRatio());
+    if (needResize) renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  }
+
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    // hover/drone subtle motion
+    drone.rotation.y = 0.12 * Math.sin(t/6);
+    drone.position.y = 0.05 * Math.sin(t/1.7);
+
+    // rotor spin
+    rotorGroup.forEach((r, i) => { r.rotation.y += r.userData.speed * (1 + Math.sin(t*0.5)*0.2); });
+
+    handleHover();
+    controls.update();
+    resizeRendererToDisplaySize();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // window resize handling
+  window.addEventListener('resize', () => {
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+  });
+
+  // helper: when user clicks feature list, focus on hotspot
+  function focusOnHotspot(id){
+    const target = hotspotMeshes.find(m=>m.userData.id===id);
+    if (!target) return;
+    // smooth camera tween
+    const fromPos = camera.position.clone();
+    const toPos = target.position.clone().add(new THREE.Vector3(0,1.2,2));
+    const fromTarget = controls.target.clone();
+    const toTarget = target.position.clone();
+    const duration = 700; // ms
+    const start = performance.now();
+    function step(now){
+      const p = Math.min(1,(now-start)/duration);
+      camera.position.lerpVectors(fromPos, toPos, easeOutCubic(p));
+      controls.target.lerpVectors(fromTarget, toTarget, easeOutCubic(p));
+      controls.update();
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+    setActiveFeature(id);
+  }
+
+  function easeOutCubic(x){ return 1 - Math.pow(1-x,3); }
+
+  // expose for debugging (optional)
+  window._focusnews = { scene, camera, renderer, setActiveFeature, startTour, stopTour };
+
+  </script>
+</body>
+</html>
