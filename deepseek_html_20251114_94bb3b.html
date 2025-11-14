@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAVACH-X | Advanced Adaptive Defense System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Orbitron', 'Segoe UI', sans-serif;
+        }
+
+        :root {
+            --primary: #00e5ff;
+            --secondary: #0a2a5e;
+            --accent: #ff4d00;
+            --dark: #0a0e17;
+            --light: #e6f7ff;
+            --neon-glow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 40px var(--primary);
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(10, 14, 23, 0.9), rgba(10, 14, 23, 0.9)),
+                radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(255, 77, 0, 0.1) 0%, transparent 40%);
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 229, 255, 0.3);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: var(--neon-glow);
+        }
+
+        .logo i {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 1.1rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 5px var(--primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.5;
+            background: radial-gradient(circle at center, var(--primary) 0%, transparent 70%);
+            animation: pulse 8s infinite alternate;
+        }
+
+        .hero h1 {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 229, 255, 0.7);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            max-width: 800px;
+            margin-bottom: 2.5rem;
+            color: #b3e0ff;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            padding: 1.2rem 3rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 229, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 229, 255, 0.6);
+            background: linear-gradient(45deg, var(--accent), var(--primary));
+        }
+
+        /* Sections */
+        section {
+            padding: 8rem 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            margin-bottom: 4rem;
+            text-align: center;
+            position: relative;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 4px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Problem Section */
+        .problem-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .problem-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .problem-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .problem-card:hover::before {
+            left: 100%;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary);
+        }
+
+        .problem-card i {
+            font-size: 3.5rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 15px var(--accent);
+        }
+
+        .problem-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1.2rem;
+            color: var(--primary);
+        }
+
+        .problem-card p {
+            color: #b3e0ff;
+            line-height: 1.6;
+        }
+
+        /* Solution Section */
+        .solution-content {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .solution-text {
+            flex: 1;
+        }
+
+        .solution-text h3 {
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .solution-text p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #b3e0ff;
+            line-height: 1.7;
+        }
+
+        .solution-text ul {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .solution-text li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            color: #b3e0ff;
+        }
+
+        .solution-visual {
+            flex: 1;
+            position: relative;
+            height: 500px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+        }
+
+        #drone-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .drone-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: var(--light);
+            border: 1px solid var(--primary);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        /* Features Section */
+        .features-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2.5rem;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 15px 30px rgba(0, 229, 255, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1.2rem;
+            color: var(--light);
+        }
+
+        .feature-card p {
+            color: #b3e0ff;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .feature-tag {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 5px 15px;
+            background: rgba(0, 229, 255, 0.2);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            align-self: flex-start;
+        }
+
+        /* Demo Section */
+        .demo-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .demo-visual {
+            height: 500px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+        }
+
+        .shield {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 30px var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: rotate 20s linear infinite;
+        }
+
+        .hexagon {
+            position: absolute;
+            width: 50px;
+            height: 29px;
+            background: rgba(0, 229, 255, 0.7);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .hexagon:hover {
+            background: rgba(255, 77, 0, 0.7);
+            transform: scale(1.2);
+        }
+
+        .demo-text {
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            font-size: 1.2rem;
+            color: #b3e0ff;
+            line-height: 1.7;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(10, 42, 94, 0.9);
+            padding: 4rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(0, 229, 255, 0.3);
+        }
+
+        .footer-content {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            text-shadow: var(--neon-glow);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--light);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--primary);
+        }
+
+        .copyright {
+            color: #8fb3ff;
+            font-size: 1rem;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        @keyframes rotate {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px rgba(0, 229, 255, 0.7); }
+            100% { text-shadow: 0 0 20px rgba(0, 229, 255, 0.9), 0 0 30px rgba(0, 229, 255, 0.5); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .solution-content {
+                flex-direction: column;
+            }
+            
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .section-title {
+                font-size: 2.2rem;
+            }
+            
+            .problem-container, .features-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>KAVACH-X</span>
+        </div>
+        <div class="nav-links">
+            <a href="#problem">The Problem</a>
+            <a href="#solution">The Solution</a>
+            <a href="#features">Features</a>
+            <a href="#demo">How It Works</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <h1>KAVACH-X</h1>
+        <p>The Next Generation of Adaptive Defense Technology</p>
+        <p>An intelligent, self-healing shield system that redefines protection through advanced swarm intelligence and dynamic reconfiguration capabilities.</p>
+        <button class="cta-button">
+            <i class="fas fa-play-circle"></i>
+            Watch System Demo
+        </button>
+    </section>
+
+    <!-- Problem Section -->
+    <section id="problem" class="problem">
+        <h2 class="section-title">The Defense Challenge</h2>
+        <div class="problem-container">
+            <div class="problem-card">
+                <i class="fas fa-money-bill-wave"></i>
+                <h3>Prohibitive Costs</h3>
+                <p>Current defense systems rely on expensive single-use interceptors costing millions per engagement, creating unsustainable economic burden.</p>
+            </div>
+            <div class="problem-card">
+                <i class="fas fa-bullseye"></i>
+                <h3>Single-Point Failure</h3>
+                <p>Traditional systems depend on perfect accuracy with no margin for error - one missed interception equals catastrophic failure.</p>
+            </div>
+            <div class="problem-card">
+                <i class="fas fa-exchange-alt"></i>
+                <h3>Lack of Adaptability</h3>
+                <p>Static defense architectures cannot effectively respond to evolving multi-vector threats and advanced missile technologies.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section id="solution" class="solution">
+        <h2 class="section-title">Our Revolutionary Solution</h2>
+        <div class="solution-content">
+            <div class="solution-text">
+                <h3>Intelligent Swarm Defense Ecosystem</h3>
+                <p>KAVACH-X represents a paradigm shift in defensive technology, moving from reactive interception to proactive protection. Our system utilizes advanced K-Link drones that physically connect to form dynamic, reconfigurable defense structures.</p>
+                <p>Unlike traditional systems, KAVACH-X creates a living, adaptive shield that responds to threats in real-time, self-heals when damaged, and provides continuous protection without operational downtime.</p>
+                <ul>
+                    <li><i class="fas fa-check" style="color: var(--accent);"></i> Fully reusable defense platform</li>
+                    <li><i class="fas fa-check" style="color: var(--accent);"></i> Advanced self-healing capability</li>
+                    <li><i class="fas fa-check" style="color: var(--accent);"></i> Multi-spectrum protection system</li>
+                    <li><i class="fas fa-check" style="color: var(--accent);"></i> 24/7 continuous operational readiness</li>
+                    <li><i class="fas fa-check" style="color: var(--accent);"></i> Cost-effective defense solution</li>
+                </ul>
+            </div>
+            <div class="solution-visual">
+                <div id="drone-container">
+                    <!-- 3D Drone will be rendered here -->
+                </div>
+                <div class="drone-controls">
+                    <button class="control-btn" id="rotate-btn">Rotate</button>
+                    <button class="control-btn" id="zoom-btn">Zoom</button>
+                    <button class="control-btn" id="demo-btn">Demo Mode</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <h2 class="section-title">Advanced Capabilities</h2>
+        <div class="features-container">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>Swarm Intelligence</h3>
+                <p>K-Link drones operate as a cohesive unit with distributed AI, enabling complex coordinated behaviors and real-time adaptation to emerging threats through advanced machine learning algorithms.</p>
+                <span class="feature-tag">AI-Powered</span>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-puzzle-piece"></i>
+                </div>
+                <h3>Dynamic Reconfiguration</h3>
+                <p>Drones physically lock together using advanced electro-adhesion technology, forming any required defensive structure - from protective domes to intercept nets - in milliseconds.</p>
+                <span class="feature-tag">Adaptive Structures</span>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <h3>Self-Healing System</h3>
+                <p>If drones are damaged or destroyed, the system instantly reroutes power and reconfigures to maintain structural integrity and mission capability without performance degradation.</p>
+                <span class="feature-tag">Resilient Design</span>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-eye-slash"></i>
+                </div>
+                <h3>Multi-Spectrum Deception</h3>
+                <p>Integrated screens and advanced emitters create false targets, disrupt guidance systems, and provide visual/RF camouflage to confuse and defeat enemy targeting systems.</p>
+                <span class="feature-tag">Electronic Warfare</span>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-wind"></i>
+                </div>
+                <h3>Aero-Brake Interception</h3>
+                <p>Special formations create controlled turbulence fields to destabilize and slow incoming threats without physical contact, enabling safe capture and neutralization.</p>
+                <span class="feature-tag">Non-Kinetic Engagement</span>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-infinity"></i>
+                </div>
+                <h3>24/7 Operational Readiness</h3>
+                <p>Advanced hot-swap technology allows seamless replacement of low-power drones, ensuring continuous protection with zero operational downtime or vulnerability windows.</p>
+                <span class="feature-tag">Continuous Defense</span>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Electro-Adhesive Coupling</h3>
+                <p>Advanced electro-adhesive pads create powerful bonds between drones, allowing formation of solid structures capable of withstanding extreme forces and impacts.</p>
+                <span class="feature-tag">Structural Integrity</span>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-satellite-dish"></i>
+                </div>
+                <h3>Stealth & Signature Management</h3>
+                <p>Advanced thermal and acoustic cloaking capabilities make the system virtually undetectable to infrared and acoustic sensors, providing tactical advantage.</p>
+                <span class="feature-tag">Low Observability</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo">
+        <h2 class="section-title">How KAVACH-X Works</h2>
+        <div class="demo-container">
+            <div class="demo-visual">
+                <div class="shield" id="shieldDemo">
+                    <!-- Hexagons will be added by JavaScript -->
+                </div>
+            </div>
+            <div class="demo-text">
+                <p>KAVACH-X forms intelligent defense structures that adapt in real-time to neutralize threats through a sophisticated combination of physical interception, electronic warfare, and non-kinetic neutralization technologies.</p>
+                <p>The system's distributed AI enables autonomous decision-making while maintaining human oversight, creating a perfect synergy between machine speed and human judgment.</p>
+            </div>
+            <button class="cta-button">
+                <i class="fas fa-download"></i>
+                Download Technical Specifications
+            </button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="footer-content">
+            <div class="footer-logo">KAVACH-X</div>
+            <div class="footer-links">
+                <a href="#">Home</a>
+                <a href="#problem">The Problem</a>
+                <a href="#solution">The Solution</a>
+                <a href="#features">Features</a>
+                <a href="#demo">How It Works</a>
+                <a href="#">Contact</a>
+            </div>
+            <p class="copyright">© 2023 KAVACH-X Advanced Defense Systems. All rights reserved. | Classified Technology</p>
+        </div>
+    </footer>
+
+    <script>
+        // Three.js 3D Drone Model
+        let scene, camera, renderer, drone;
+        let isRotating = true;
+        let isZoomed = false;
+
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0e17);
+            scene.fog = new THREE.Fog(0x0a0e17, 10, 50);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 15;
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.getElementById('drone-container').offsetWidth, 
+                            document.getElementById('drone-container').offsetHeight);
+            document.getElementById('drone-container').appendChild(renderer.domElement);
+
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0x444444);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0x00e5ff, 1);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0xff4d00, 1, 100);
+            pointLight.position.set(-5, -5, 5);
+            scene.add(pointLight);
+
+            // Create drone model
+            createDrone();
+
+            // Add controls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Animation loop
+            animate();
+        }
+
+        function createDrone() {
+            const droneGroup = new THREE.Group();
+
+            // Central body (hexagonal)
+            const bodyGeometry = new THREE.CylinderGeometry(2, 2, 1, 6);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x00e5ff,
+                shininess: 100,
+                emissive: 0x003366
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            droneGroup.add(body);
+
+            // Propellers
+            const propellerGeometry = new THREE.BoxGeometry(0.2, 3, 0.1);
+            const propellerMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2;
+                const propeller = new THREE.Mesh(propellerGeometry, propellerMaterial);
+                propeller.position.x = Math.cos(angle) * 3;
+                propeller.position.y = Math.sin(angle) * 3;
+                propeller.rotation.z = angle;
+                droneGroup.add(propeller);
+                
+                // Propeller guards
+                const guardGeometry = new THREE.TorusGeometry(0.8, 0.05, 8, 6);
+                const guardMaterial = new THREE.MeshPhongMaterial({ color: 0xff4d00 });
+                const guard = new THREE.Mesh(guardGeometry, guardMaterial);
+                guard.position.x = Math.cos(angle) * 3;
+                guard.position.y = Math.sin(angle) * 3;
+                guard.rotation.x = Math.PI / 2;
+                droneGroup.add(guard);
+            }
+
+            // Central sensor
+            const sensorGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const sensorMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xff4d00,
+                emissive: 0x331100
+            });
+            const sensor = new THREE.Mesh(sensorGeometry, sensorMaterial);
+            sensor.position.z = 0.6;
+            droneGroup.add(sensor);
+
+            scene.add(droneGroup);
+            drone = droneGroup;
+        }
+
+        function onWindowResize() {
+            camera.aspect = document.getElementById('drone-container').offsetWidth / 
+                           document.getElementById('drone-container').offsetHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('drone-container').offsetWidth, 
+                           document.getElementById('drone-container').offsetHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isRotating && drone) {
+                drone.rotation.y += 0.01;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Initialize 3D scene when page loads
+        window.addEventListener('load', init);
+
+        // Control buttons
+        document.getElementById('rotate-btn').addEventListener('click', function() {
+            isRotating = !isRotating;
+            this.textContent = isRotating ? 'Pause Rotation' : 'Rotate';
+        });
+
+        document.getElementById('zoom-btn').addEventListener('click', function() {
+            if (isZoomed) {
+                camera.position.z = 15;
+                isZoomed = false;
+                this.textContent = 'Zoom';
+            } else {
+                camera.position.z = 5;
+                isZoomed = true;
+                this.textContent = 'Zoom Out';
+            }
+        });
+
+        document.getElementById('demo-btn').addEventListener('click', function() {
+            // Simple demo mode - rotate faster
+            if (drone) {
+                drone.rotation.y += 0.5;
+            }
+        });
+
+        // Create shield hexagons
+        const shieldDemo = document.getElementById('shieldDemo');
+        const radius = 120;
+        const hexSize = 50;
+        
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                const angle = (i * 45) * (Math.PI / 180);
+                const x = radius * Math.cos(angle) + (j % 2 === 0 ? 0 : hexSize * 0.75);
+                const y = radius * Math.sin(angle) + (j * hexSize * 0.85);
+                
+                const hexagon = document.createElement('div');
+                hexagon.className = 'hexagon';
+                hexagon.style.left = `calc(50% + ${x}px)`;
+                hexagon.style.top = `calc(50% + ${y}px)`;
+                hexagon.style.animation = `float ${4 + Math.random() * 3}s infinite ease-in-out`;
+                hexagon.style.animationDelay = `${Math.random() * 2}s`;
+                shieldDemo.appendChild(hexagon);
+            }
+        }
+
+        // Scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections for animation
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(30px)';
+            section.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+            observer.observe(section);
+        });
+
+        // Observe cards for animation
+        document.querySelectorAll('.problem-card, .feature-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
